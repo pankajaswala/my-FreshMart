@@ -17,7 +17,7 @@ async function loadProducts() {
 
     try {
 
-        const response = await fetch("http://localhost:5000/api/products");
+        const response = await fetch("https://my-freshmart.onrender.com/api/products");
 
         const products = await response.json();
 
@@ -486,7 +486,7 @@ if (checkoutBtn) {
 
         
 
-            const response = await fetch("http://localhost:5000/api/orders", {
+            const response = await fetch("https://my-freshmart.onrender.com/api/orders", {
 
                 method: "POST",
 
@@ -558,7 +558,7 @@ async function loadMyOrders() {
 
     try {
 
-        const res = await fetch("http://localhost:5000/api/orders/myorders", {
+        const res = await fetch("https://my-freshmart.onrender.com/api/orders/myorders", {
 
             headers: {
                 Authorization: `Bearer ${token}`
