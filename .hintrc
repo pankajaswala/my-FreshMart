@@ -1,0 +1,31 @@
+{
+  "extends": [
+    "development"
+  ],
+  "hints": {
+    "axe/forms": [
+      "default",
+      {
+        "select-name": "off"
+      }
+    ],
+    "axe/name-role-value": [
+      "default",
+      {
+        "button-name": "off",
+        "link-name": "off"
+      }
+    ],
+    "axe/text-alternatives": [
+      "default",
+      {
+        "image-alt": "off"
+      }
+    ],
+    "button-type": "off",
+    "disown-opener": "off",
+    "axe/parsing": "off",
+    "no-inline-styles": "off",
+    "meta-viewport": "off"
+  }
+}
