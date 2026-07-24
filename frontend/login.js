@@ -1,7 +1,6 @@
 const loginForm = document.getElementById("loginForm");
 
 loginForm.addEventListener("submit", async (e) => {
-
     e.preventDefault();
 
     const email = document.getElementById("email").value.trim();
@@ -9,8 +8,7 @@ loginForm.addEventListener("submit", async (e) => {
 
     try {
 
-        const response = await fetch("https://my-freshmart.onrender.com/api/users/login", {
-            
+        const response = await fetch("https://my-freshmart-3.onrender.com/api/users/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -23,23 +21,24 @@ loginForm.addEventListener("submit", async (e) => {
 
         const data = await response.json();
 
-        console.log("Response =", data);
-        console.log("Status =", response.status);
-        console.log("OK =", response.ok);
+        console.log("Response:", data);
 
         if (response.ok) {
 
+            // Save token
             localStorage.setItem("token", data.token);
+
+            // Save admin status
             localStorage.setItem("isAdmin", data.isAdmin);
 
+            // Save user details
             localStorage.setItem("user", JSON.stringify({
                 name: data.name,
-                email: data.email
+                email: data.email,
+                isAdmin: data.isAdmin
             }));
 
-            console.log("Saved User =", localStorage.getItem("user"));
-
-            alert("Login Successful ✅");
+            alert("✅ Login Successful");
 
             if (data.isAdmin) {
                 window.location.href = "admin.html";
@@ -49,15 +48,14 @@ loginForm.addEventListener("submit", async (e) => {
 
         } else {
 
-            alert(data.message);
+            alert(data.message || "Login Failed");
 
         }
 
     } catch (error) {
 
-        console.error(error);
-        alert("Server Error");
+        console.error("Login Error:", error);
+        alert("❌ Unable to connect to the server.");
 
     }
-
 });

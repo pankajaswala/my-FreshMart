@@ -1,78 +1,176 @@
-// =========================
-// FRESHMART CART SYSTEM
-// =====
-
-
-
-// ======================================
+// =========================================
 // FRESHMART SCRIPT.JS (PART 1)
-// Products + Cart + Add To Cart
-// ======================================
+// Products + Search + Filter + Cart
+// =========================================
+
+const API_URL = "http://localhost:5000/api";
+
+const productGrid = document.getElementById("productGrid");
+const searchInput = document.getElementById("searchInput");
+const cartCount = document.getElementById("cartCount");
+
+let allProducts = [];
+
+// =======================
+// LOAD PRODUCTS
+// =======================
 
 async function loadProducts() {
-
-    const productGrid = document.getElementById("productGrid");
 
     if (!productGrid) return;
 
     try {
 
-        const response = await fetch("https://my-freshmart.onrender.com/api/products");
-
+        const response = await fetch(`${API_URL}/products`);
         const products = await response.json();
 
-        productGrid.innerHTML = "";
+        allProducts = products;
 
-        products.forEach(product => {
-
-            productGrid.innerHTML += `
-                <div class="product-card ${product.category}">
-
-                    <span class="badge">Fresh</span>
-
-                    <img src="${product.image}" alt="${product.name}">
-
-                    <h3>${product.name}</h3>
-
-                    <p class="product-description">${product.description || ""}</p>
-
-                    <p>₹${product.price} / ${product.unit}</p>
-
-                    <p><b>Stock:</b> ${product.stock} ${product.unit}</p>
-
-                    ${
-                        product.stock > 0
-                        ?
-                        `<button
-                            class="btn addCart"
-                            data-id="${product._id}"
-                            data-name="${product.name}"
-                            data-price="${product.price}"
-                            data-image="${product.image}">
-                            Add To Cart
-                        </button>`
-                        :
-                        `<button class="btn" disabled style="background:red;cursor:not-allowed;">
-                            Out Of Stock
-                        </button>`
-                    }
-
-                </div>
-            `;
-
-        });
+        displayProducts(products);
 
     } catch (error) {
 
-        console.log(error);
+        console.error("Error:", error);
+
+        productGrid.innerHTML = `
+            <h2 style="color:red;text-align:center;">
+                Failed To Load Products
+            </h2>
+        `;
+    }
+}
+
+// =======================
+// DISPLAY PRODUCTS
+// =======================
+
+function displayProducts(products) {
+
+    productGrid.innerHTML = "";
+
+    if (products.length === 0) {
+
+        productGrid.innerHTML = "<h2>No Products Found</h2>";
+        return;
 
     }
 
+    products.forEach(product => {
+
+        productGrid.innerHTML += `
+
+        <div class="product-card ${product.category}">
+
+            <span class="badge">Fresh</span>
+
+            <img src="${product.image}" alt="${product.name}">
+
+            <h3>${product.name}</h3>
+
+            <p>${product.description || ""}</p>
+
+            <p>
+                <strong>₹${product.price}</strong>
+                / ${product.weight}${product.unit}
+            </p>
+
+            <p>
+                Stock :
+                ${product.stock}
+            </p>
+
+            ${
+                product.stock > 0
+                ?
+                `<button
+                    class="btn addCart"
+                    data-id="${product._id}"
+                    data-name="${product.name}"
+                    data-price="${product.price}"
+                    data-image="${product.image}">
+                    Add To Cart
+                </button>`
+                :
+                `<button
+                    class="btn"
+                    disabled>
+                    Out Of Stock
+                </button>`
+            }
+
+        </div>
+
+        `;
+
+    });
+
 }
 
-// ----------------------------
+// =======================
+// SEARCH
+// =======================
+
+if (searchInput) {
+
+    searchInput.addEventListener("keyup", () => {
+
+        const value = searchInput.value.toLowerCase();
+
+        const result = allProducts.filter(product =>
+
+            product.name.toLowerCase().includes(value)
+
+        );
+
+        displayProducts(result);
+
+    });
+
+}
+
+// =======================
+// FILTER
+// =======================
+
+const filterButtons = document.querySelectorAll(".filter-btn");
+
+filterButtons.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        filterButtons.forEach(btn =>
+
+            btn.classList.remove("active")
+
+        );
+
+        button.classList.add("active");
+
+        const category = button.dataset.filter;
+
+        if (category === "all") {
+
+            displayProducts(allProducts);
+
+            return;
+
+        }
+
+        const filtered = allProducts.filter(product =>
+
+            product.category.toLowerCase() === category.toLowerCase()
+
+        );
+
+        displayProducts(filtered);
+
+    });
+
+});
+
+// =======================
 // CART FUNCTIONS
-// ----------------------------
+// =======================
 
 function getCart() {
 
@@ -88,13 +186,13 @@ function saveCart(cart) {
 
 function updateCartCount() {
 
-    const cartCount = document.getElementById("cartCount");
-
     if (!cartCount) return;
+
+    const cart = getCart();
 
     let total = 0;
 
-    getCart().forEach(item => {
+    cart.forEach(item => {
 
         total += item.quantity;
 
@@ -104,23 +202,18 @@ function updateCartCount() {
 
 }
 
-// ----------------------------
+// =======================
 // ADD TO CART
-// ----------------------------
+// =======================
 
 document.addEventListener("click", function(e){
 
     if(!e.target.classList.contains("addCart")) return;
 
-    const button = e.target;
-
-    const id = button.dataset.id;
-
-    const name = button.dataset.name;
-
-    const price = Number(button.dataset.price);
-
-    const image = button.dataset.image;
+    const id = e.target.dataset.id;
+    const name = e.target.dataset.name;
+    const price = Number(e.target.dataset.price);
+    const image = e.target.dataset.image;
 
     let cart = getCart();
 
@@ -148,17 +241,16 @@ document.addEventListener("click", function(e){
 
     updateCartCount();
 
-    alert("Product Added Successfully ✅");
+    alert(`${name} Added To Cart ✅`);
 
 });
 
-// ----------------------------
+// =======================
 // START
-// ----------------------------
-
-loadProducts();
+// =======================
 
 updateCartCount();
+loadProducts();
 
 // ======================================
 // FRESHMART SCRIPT.JS (PART 2)
@@ -184,10 +276,18 @@ function loadCartPage() {
 
     if (cart.length === 0) {
 
-        cartItems.innerHTML = "<h2>Your Cart is Empty 🛒</h2>";
+        cartItems.innerHTML = `
+            <h2 style="text-align:center;">
+                Your Cart is Empty 🛒
+            </h2>
+        `;
 
         if (orderSummary) {
-            orderSummary.innerHTML = "<h3>Total : ₹0</h3>";
+
+            orderSummary.innerHTML = `
+                <h3>Total : ₹0</h3>
+            `;
+
         }
 
         return;
@@ -201,9 +301,13 @@ function loadCartPage() {
 
         <div class="cart-item">
 
-            <img src="${item.image}" width="80">
+            <img
+                src="${item.image}"
+                alt="${item.name}"
+                width="80"
+            >
 
-            <div>
+            <div class="cart-details">
 
                 <h3>${item.name}</h3>
 
@@ -234,18 +338,19 @@ function loadCartPage() {
     });
 
     const delivery = 40;
-
     const total = subtotal + delivery;
 
-    if(orderSummary){
+    if (orderSummary) {
 
         orderSummary.innerHTML = `
 
-            <p>Items : ₹${subtotal}</p>
+            <p>Items Total : ₹${subtotal}</p>
 
-            <p>Delivery : ₹${delivery}</p>
+            <p>Delivery Charge : ₹${delivery}</p>
 
-            <h3>Total : ₹${total}</h3>
+            <hr>
+
+            <h2>Total : ₹${total}</h2>
 
         `;
 
@@ -257,7 +362,7 @@ function loadCartPage() {
 // INCREASE QUANTITY
 // ----------------------------
 
-function increaseQty(index){
+function increaseQty(index) {
 
     let cart = getCart();
 
@@ -275,17 +380,17 @@ function increaseQty(index){
 // DECREASE QUANTITY
 // ----------------------------
 
-function decreaseQty(index){
+function decreaseQty(index) {
 
     let cart = getCart();
 
-    if(cart[index].quantity > 1){
+    if (cart[index].quantity > 1) {
 
         cart[index].quantity--;
 
-    }else{
+    } else {
 
-        cart.splice(index,1);
+        cart.splice(index, 1);
 
     }
 
@@ -301,11 +406,11 @@ function decreaseQty(index){
 // REMOVE ITEM
 // ----------------------------
 
-function removeItem(index){
+function removeItem(index) {
 
     let cart = getCart();
 
-    cart.splice(index,1);
+    cart.splice(index, 1);
 
     saveCart(cart);
 
@@ -316,120 +421,29 @@ function removeItem(index){
 }
 
 // ----------------------------
-// LOAD CART
+// CLEAR CART
+// ----------------------------
+
+function clearCart() {
+
+    localStorage.removeItem("cart");
+
+    loadCartPage();
+
+    updateCartCount();
+
+}
+
+// ----------------------------
+// LOAD CART PAGE
 // ----------------------------
 
 loadCartPage();
+
 // ======================================
 // FRESHMART SCRIPT.JS (PART 3)
-// SEARCH + FILTER + CHECKOUT
+// CHECKOUT + MY ORDERS
 // ======================================
-
-// ----------------------------
-// SEARCH
-// ----------------------------
-
-const searchInput = document.getElementById("searchInput");
-
-if (searchInput) {
-
-    searchInput.addEventListener("keyup", function () {
-
-        const value = this.value.toLowerCase();
-
-        document.querySelectorAll(".product-card").forEach(card => {
-
-            const text = card.innerText.toLowerCase();
-
-            if (text.includes(value)) {
-
-                card.style.display = "block";
-
-            } else {
-
-                card.style.display = "none";
-
-            }
-
-        });
-
-    });
-
-}
-
-// ----------------------------
-// FILTER
-// ----------------------------
-
-const filterButtons = document.querySelectorAll(".filter-btn");
-
-if (filterButtons.length) {
-
-    filterButtons.forEach(button => {
-
-        button.addEventListener("click", () => {
-
-            filterButtons.forEach(btn => btn.classList.remove("active"));
-
-            button.classList.add("active");
-
-            const filter = button.dataset.filter;
-
-            document.querySelectorAll(".product-card").forEach(card => {
-
-                if (filter === "all" || card.classList.contains(filter)) {
-
-                    card.style.display = "block";
-
-                } else {
-
-                    card.style.display = "none";
-
-                }
-
-            });
-
-        });
-
-    });
-
-}
-
-// ----------------------------
-// CATEGORY FROM URL
-// ----------------------------
-
-const urlParams = new URLSearchParams(window.location.search);
-
-const selectedCategory = urlParams.get("category");
-
-if (selectedCategory) {
-
-    document.querySelectorAll(".filter-btn").forEach(btn => {
-
-        btn.classList.remove("active");
-
-    });
-
-    const activeBtn = document.querySelector(`[data-filter="${selectedCategory}"]`);
-
-    if (activeBtn) activeBtn.classList.add("active");
-
-    document.querySelectorAll(".product-card").forEach(card => {
-
-        if (card.classList.contains(selectedCategory)) {
-
-            card.style.display = "block";
-
-        } else {
-
-            card.style.display = "none";
-
-        }
-
-    });
-
-}
 
 // ----------------------------
 // CHECKOUT
@@ -444,7 +458,7 @@ if (checkoutBtn) {
         const token = localStorage.getItem("token");
 
         if (!token) {
-            alert("Please login first");
+            alert("Please Login First");
             window.location.href = "login.html";
             return;
         }
@@ -452,21 +466,20 @@ if (checkoutBtn) {
         const cart = getCart();
 
         if (cart.length === 0) {
-            alert("Cart is Empty");
+            alert("Your Cart is Empty");
             return;
         }
 
-        // Customer Details
         const customerName = document.getElementById("customerName").value.trim();
         const phone = document.getElementById("phone").value.trim();
         const address = document.getElementById("address").value.trim();
 
         const paymentMethod = document.querySelector(
             'input[name="payment"]:checked'
-        ).value;
+        )?.value;
 
-        if (!customerName || !phone || !address) {
-            alert("Please fill all delivery details.");
+        if (!customerName || !phone || !address || !paymentMethod) {
+            alert("Please fill all delivery details");
             return;
         }
 
@@ -475,18 +488,13 @@ if (checkoutBtn) {
             quantity: item.quantity
         }));
 
-
-
-        
         const totalPrice = cart.reduce((sum, item) => {
             return sum + (item.price * item.quantity);
         }, 0);
 
         try {
 
-        
-
-            const response = await fetch("https://my-freshmart.onrender.com/api/orders", {
+            const response = await fetch("http://localhost:5000/api/orders", {
 
                 method: "POST",
 
@@ -501,7 +509,6 @@ if (checkoutBtn) {
                     phone,
                     address,
                     paymentMethod,
-
                     products,
                     totalPrice
 
@@ -527,9 +534,9 @@ if (checkoutBtn) {
 
             }
 
-        } catch (err) {
+        } catch (error) {
 
-            console.log(err);
+            console.error(error);
 
             alert("Server Error");
 
@@ -552,27 +559,31 @@ async function loadMyOrders() {
     const token = localStorage.getItem("token");
 
     if (!token) {
+
         container.innerHTML = "<h2>Please Login First</h2>";
+
         return;
+
     }
 
     try {
 
-        const res = await fetch("https://my-freshmart.onrender.com/api/orders/myorders", {
-
-            headers: {
-                Authorization: `Bearer ${token}`
+        const response = await fetch(
+            "http://localhost:5000/api/orders/myorders",
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
             }
+        );
 
-        });
-
-        const orders = await res.json();
+        const orders = await response.json();
 
         container.innerHTML = "";
 
         if (orders.length === 0) {
 
-            container.innerHTML = "<h2>No Orders Found 🛒</h2>";
+            container.innerHTML = "<h2>No Orders Found</h2>";
 
             return;
 
@@ -580,17 +591,28 @@ async function loadMyOrders() {
 
         orders.forEach(order => {
 
-            let productsHTML = "";
+            let productHTML = "";
 
             order.products.forEach(item => {
 
-                productsHTML += `
+                productHTML += `
+
                     <p>
-                        <strong>${item.productId.name || "Product"}</strong><br>
-                        Qty : ${item.quantity}<br>
-                        Price : ₹${item.productId.price || 0}
+
+                        <strong>${item.productId?.name || "Product"}</strong>
+
+                        <br>
+
+                        Qty : ${item.quantity}
+
+                        <br>
+
+                        Price : ₹${item.productId?.price || 0}
+
                     </p>
+
                     <hr>
+
                 `;
 
             });
@@ -609,13 +631,15 @@ async function loadMyOrders() {
 
                     <p><strong>Payment :</strong> ${order.paymentMethod}</p>
 
-                    ${productsHTML}
+                    ${productHTML}
 
-                    <p><strong>Total :</strong> ₹${order.totalPrice}</p>
+                    <h3>Total : ₹${order.totalPrice}</h3>
 
-                    <p><strong>Status :</strong> ${order.status}</p>
+                    <p>Status : ${order.status}</p>
 
-                    <p><strong>Date :</strong> ${new Date(order.createdAt).toLocaleDateString()}</p>
+                    <p>Date :
+                        ${new Date(order.createdAt).toLocaleDateString()}
+                    </p>
 
                 </div>
 
@@ -625,9 +649,9 @@ async function loadMyOrders() {
 
         });
 
-    } catch (err) {
+    } catch (error) {
 
-        console.log(err);
+        console.error(error);
 
     }
 
@@ -635,20 +659,112 @@ async function loadMyOrders() {
 
 loadMyOrders();
 
+// ======================================
+// FRESHMART SCRIPT.JS (PART 4)
+// FINAL
+// ======================================
 
-// ==========================
-// MOBILE MENU
-// ==========================
+// ----------------------------
+// LOGOUT
+// ----------------------------
 
-const menuBtn = document.getElementById("menuBtn");
-const navMenu = document.getElementById("navMenu");
+const logoutBtn = document.getElementById("logoutBtn");
 
-if (menuBtn && navMenu) {
+if (logoutBtn) {
 
-    menuBtn.addEventListener("click", () => {
+    logoutBtn.addEventListener("click", () => {
 
-        navMenu.classList.toggle("active");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("cart");
+
+        alert("Logged Out Successfully");
+
+        window.location.href = "login.html";
 
     });
 
 }
+
+// ----------------------------
+// LOGIN CHECK
+// ----------------------------
+
+function checkLogin() {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+
+        alert("Please Login First");
+
+        window.location.href = "login.html";
+
+    }
+
+}
+
+// ----------------------------
+// USER INFO
+// ----------------------------
+
+const user = JSON.parse(localStorage.getItem("user"));
+
+const username = document.getElementById("username");
+
+if (username && user) {
+
+    username.innerHTML = `Welcome, ${user.name}`;
+
+}
+
+// ----------------------------
+// CART COUNT
+// ----------------------------
+
+updateCartCount();
+
+// ----------------------------
+// MOBILE MENU
+// ----------------------------
+
+const menuBtn = document.getElementById("menuBtn");
+const nav = document.querySelector("nav");
+
+if (menuBtn && nav) {
+
+    menuBtn.addEventListener("click", () => {
+
+        nav.classList.toggle("show");
+
+    });
+
+}
+
+// ----------------------------
+// PAGE LOADER
+// ----------------------------
+
+window.addEventListener("DOMContentLoaded", () => {
+
+    updateCartCount();
+
+    if (document.getElementById("productGrid")) {
+
+        loadProducts();
+
+    }
+
+    if (document.getElementById("cartItems")) {
+
+        loadCartPage();
+
+    }
+
+    if (document.getElementById("ordersContainer")) {
+
+        loadMyOrders();
+
+    }
+
+});

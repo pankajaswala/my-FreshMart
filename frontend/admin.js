@@ -19,7 +19,7 @@ async function loadDashboard() {
 
     try {
 
-        const productRes = await fetch("http://localhost:5000/api/products");
+        const productRes = await fetch("http://http://localhost:5000/api/products");
         const products = await productRes.json();
 
         document.getElementById("totalProducts").innerText = products.length;
@@ -109,7 +109,7 @@ const image = document.getElementById("image").value.trim();
 const description = document.getElementById("description").value.trim();
     try {
 
-        const response = await fetch("http://localhost:5000/api/products", {
+        const response = await fetch("http://http://localhost:5000/api/products", {
 
             method: "POST",
 
@@ -189,7 +189,7 @@ async function deleteProduct(id) {
 
     try {
 
-        const response = await fetch(`http://localhost:5000/api/products/${id}`, {
+        const response = await fetch(`http://http://localhost:5000/api/products/${id}`, {
 
             method: "DELETE",
 
@@ -258,7 +258,7 @@ async function loadTotalOrders() {
 
     try {
 
-        const res = await fetch("http://localhost:5000/api/orders");
+        const res = await fetch("http://http://localhost:5000/api/orders");
 
         const orders = await res.json();
 
@@ -288,7 +288,7 @@ async function loadOrders() {
 
     try {
 
-        const res = await fetch("http://localhost:5000/api/orders");
+        const res = await fetch("http://http://localhost:5000/api/orders");
 
         const orders = await res.json();
 
@@ -406,7 +406,7 @@ async function completeOrder(id) {
 
     try {
 
-        const res = await fetch(`http://localhost:5000/api/orders/${id}`, {
+        const res = await fetch(`http://http://localhost:5000/api/orders/${id}`, {
 
             method: "PUT",
 
