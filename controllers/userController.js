@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const mongoose = require("mongoose");
 const User = require("../models/User");
 
+
 // ==========================
 // REGISTER USER
 // ==========================
@@ -17,36 +18,46 @@ const registerUser = async (req, res) => {
         if (!name || !email || !password) {
 
             return res.status(400).json({
-                message: "Please fill all fields",
+                message: "Please fill all fields"
             });
 
         }
 
 
-        console.log("Register API Called");
-        console.log("Ready State:", mongoose.connection.readyState);
+        console.log("REGISTER REQUEST:", req.body);
+        console.log(
+            "MongoDB Status:",
+            mongoose.connection.readyState
+        );
 
 
-        const userExists = await User.findOne({ email });
+        const userExists = await User.findOne({
+            email: email
+        });
 
 
         if (userExists) {
 
             return res.status(400).json({
-                message: "User already exists",
+                message: "User already exists"
             });
 
         }
 
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(
+            password,
+            10
+        );
 
 
         const user = await User.create({
 
-            name,
-            email,
-            password: hashedPassword,
+            name: name,
+
+            email: email,
+
+            password: hashedPassword
 
         });
 
@@ -55,17 +66,28 @@ const registerUser = async (req, res) => {
 
             message: "Registration Successful",
 
+            user: {
+
+                id: user._id,
+
+                name: user.name,
+
+                email: user.email
+
+            }
+
         });
 
 
     } catch (error) {
 
-        console.log("Register Error:", error);
+
+        console.log("REGISTER ERROR:", error);
 
 
         res.status(500).json({
 
-            message: error.message,
+            message: error.message
 
         });
 
@@ -75,11 +97,13 @@ const registerUser = async (req, res) => {
 
 
 
+
 // ==========================
 // LOGIN USER
 // ==========================
 
 const loginUser = async (req, res) => {
+
 
     try {
 
@@ -88,56 +112,80 @@ const loginUser = async (req, res) => {
 
 
 
+        console.log("LOGIN REQUEST:", req.body);
+
+
+
         if (!email || !password) {
+
 
             return res.status(400).json({
 
-                message: "Please enter email and password",
+                message: "Please enter email and password"
 
             });
+
 
         }
 
 
 
-        console.log("Login API Called");
-        console.log("Ready State:", mongoose.connection.readyState);
+        console.log(
+            "MongoDB Status:",
+            mongoose.connection.readyState
+        );
 
 
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({
+
+            email: email
+
+        });
+
+
+
+        console.log("FOUND USER:", user);
 
 
 
         if (!user) {
 
-            return res.status(400).json({
 
-                message: "User not found",
+            return res.status(404).json({
+
+                message: "User not found"
 
             });
+
 
         }
 
 
 
 
-        const isMatch = await bcrypt.compare(
+        const passwordMatch = await bcrypt.compare(
+
             password,
+
             user.password
+
         );
 
 
 
-        if (!isMatch) {
+        if (!passwordMatch) {
+
 
             return res.status(400).json({
 
-                message: "Invalid password",
+                message: "Invalid password"
 
             });
 
+
         }
+
 
 
 
@@ -148,7 +196,7 @@ const loginUser = async (req, res) => {
 
                 id: user._id,
 
-                isAdmin: user.isAdmin,
+                isAdmin: user.isAdmin || false
 
             },
 
@@ -158,9 +206,10 @@ const loginUser = async (req, res) => {
 
             {
 
-                expiresIn: "1d",
+                expiresIn: "1d"
 
             }
+
 
         );
 
@@ -170,50 +219,57 @@ const loginUser = async (req, res) => {
 
         res.status(200).json({
 
+
             message: "Login Successful",
+
 
             id: user._id,
 
-            token,
-
-            isAdmin: user.isAdmin,
 
             name: user.name,
 
+
             email: user.email,
+
+
+            isAdmin: user.isAdmin || false,
+
+
+            token: token
+
 
         });
 
 
 
-    } catch (error) {
+    } catch(error) {
 
 
-        console.log("Login Error:", error);
+
+        console.log("LOGIN ERROR:", error);
 
 
 
         res.status(500).json({
 
-            message: error.message,
+            message: error.message
 
         });
 
 
     }
 
+
 };
 
 
 
-// ==========================
-// EXPORTS
-// ==========================
+
 
 module.exports = {
 
     registerUser,
 
-    loginUser,
+    loginUser
 
 };
