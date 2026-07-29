@@ -6,13 +6,15 @@ const Product = require("../models/Product");
 const getProducts = async (req, res) => {
     try {
 
-        console.log("Collection:", Product.collection.name);
+        console.log("========== PRODUCT API ==========");
+        console.log("Collection Name:", Product.collection.name);
 
         const count = await Product.countDocuments();
-
         console.log("Total Products:", count);
 
         const products = await Product.find();
+
+        console.log(products);
 
         res.status(200).json(products);
 
