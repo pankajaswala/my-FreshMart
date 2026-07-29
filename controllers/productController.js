@@ -4,8 +4,13 @@ const Product = require("../models/Product");
 // GET ALL PRODUCTS
 // =========================
 const getProducts = async (req, res) => {
-
     try {
+
+        console.log("Collection:", Product.collection.name);
+
+        const count = await Product.countDocuments();
+
+        console.log("Total Products:", count);
 
         const products = await Product.find();
 
@@ -13,51 +18,13 @@ const getProducts = async (req, res) => {
 
     } catch (error) {
 
-        res.status(500).json({
-            message: error.message
-        });
-
-    }
-
-};
-
-// =========================
-// ADD PRODUCT
-// =========================
-const addProduct = async (req, res) => {
-
-    try {
-
-        console.log(req.body);
-
-        const product = new Product({
-
-            name: req.body.name,
-            category: req.body.category,
-            weight: req.body.weight,
-            price: req.body.price,
-            unit: req.body.unit,
-            image: req.body.image,
-            stock: req.body.stock,
-            description: req.body.description
-
-        });
-
-        const savedProduct = await product.save();
-
-        res.status(201).json({
-            message: "Product Added Successfully",
-            product: savedProduct
-        });
-
-    } catch (error) {
+        console.log(error);
 
         res.status(500).json({
             message: error.message
         });
 
     }
-
 };
 // =========================
 // UPDATE PRODUCT
