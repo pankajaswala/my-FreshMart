@@ -5,9 +5,9 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
-console.log("JWT SECRET =", process.env.JWT_SECRET);
-
 const app = express();
+
+console.log("JWT SECRET =", process.env.JWT_SECRET);
 
 // ======================
 // Middleware
@@ -30,6 +30,29 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 
 // ======================
+// Debug Route
+// ======================
+const User = require("./models/User");
+
+app.get("/check-users", async (req, res) => {
+    try {
+        const users = await User.find();
+
+        res.json({
+            totalUsers: users.length,
+            users
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            message: error.message
+        });
+
+    }
+});
+
+// ======================
 // Home Route
 // ======================
 app.get("/", (req, res) => {
@@ -44,23 +67,20 @@ const PORT = process.env.PORT || 5000;
 mongoose
     .connect(process.env.MONGO_URI)
     .then(() => {
+
+        console.log("📦 Mongoose Connected");
         console.log("✅ MongoDB Connected");
         console.log("Database Name:", mongoose.connection.name);
 
-        console.log("Before app.listen");
-
-        const server = app.listen(PORT, () => {
+        app.listen(PORT, () => {
             console.log(`🚀 Server Running on Port ${PORT}`);
         });
 
-        console.log("After app.listen");
-
-        server.on("error", (err) => {
-            console.error("❌ Server Error:", err);
-        });
     })
     .catch((err) => {
+
         console.error("❌ MongoDB Error:", err);
+
     });
 
 // ======================

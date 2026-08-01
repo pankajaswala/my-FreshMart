@@ -2,10 +2,11 @@ const Order = require("../models/Order");
 const Product = require("../models/Product");
 
 
-// =========================
-// PLACE ORDER
-// =========================
-const placeOrder = async (req, res) => {
+// ==========================
+// CREATE ORDER
+// ==========================
+
+const createOrder = async (req, res) => {
 
     try {
 
@@ -17,9 +18,8 @@ const placeOrder = async (req, res) => {
             products,
             totalPrice
         } = req.body;
-console.log("REQ BODY =", req.body);
 
-        // Validation
+
         if (
             !customerName ||
             !phone ||
@@ -29,48 +29,16 @@ console.log("REQ BODY =", req.body);
         ) {
 
             return res.status(400).json({
-                message: "Please fill all required fields."
+                message: "Please fill all order details"
             });
 
         }
 
 
-        // Check Stock & Reduce Stock
-        for (const item of products) {
 
-            const product = await Product.findById(item.productId);
-
-
-            if (!product) {
-
-                return res.status(404).json({
-                    message: "Product Not Found"
-                });
-
-            }
-
-
-            if (product.stock < item.quantity) {
-
-                return res.status(400).json({
-                    message: `${product.name} is Out Of Stock`
-                });
-
-            }
-
-
-            product.stock -= item.quantity;
-
-            await product.save();
-
-        }
-
-
-
-        // Create Order
         const order = await Order.create({
 
-            userId: req.user._id,
+            userId: req.user.id,
 
             customerName,
 
@@ -82,9 +50,7 @@ console.log("REQ BODY =", req.body);
 
             products,
 
-            totalPrice,
-
-            status: "Pending"
+            totalPrice
 
         });
 
@@ -100,15 +66,16 @@ console.log("REQ BODY =", req.body);
 
 
 
-    } catch (error) {
+    }
+    catch(error){
 
+        console.log("Create Order Error:",error);
 
         res.status(500).json({
 
-            message: error.message
+            message:error.message
 
         });
-
 
     }
 
@@ -117,30 +84,39 @@ console.log("REQ BODY =", req.body);
 
 
 
+// ==========================
+// GET USER ORDERS
+// ==========================
 
-// =========================
-// GET MY ORDERS
-// =========================
-const getMyOrders = async (req, res) => {
+const getMyOrders = async(req,res)=>{
 
-    try {
+
+    try{
 
 
         const orders = await Order.find({
 
-            userId: req.user._id
+            userId:req.user.id
 
         })
-        .populate("products.productId")
-        .sort({createdAt:-1});
+        .populate(
+            "products.productId"
+        )
+        .sort({
+            createdAt:-1
+        });
 
 
 
-        res.status(200).json(orders);
+        res.json(orders);
 
 
 
-    } catch (error) {
+    }
+    catch(error){
+
+
+        console.log("My Orders Error:",error);
 
 
         res.status(500).json({
@@ -152,51 +128,77 @@ const getMyOrders = async (req, res) => {
 
     }
 
+
 };
 
 
 
 
-
-// =========================
+// ==========================
 // GET ALL ORDERS (ADMIN)
-// =========================
-const getAllOrders = async (req, res) => {
-    try {
+// ==========================
 
-        const orders = await Order.find()
-            .populate("userId", "name email")
-            .populate("products.productId", "name price image")
-            .sort({ createdAt: -1 });
+const getAllOrders = async(req,res)=>{
 
-        res.status(200).json(orders);
-
-    } catch (error) {
-        res.status(500).json({
-            message: error.message
-        });
-    }
-};
-
-
-
-// =========================
-// UPDATE ORDER STATUS
-// =========================
-const updateOrderStatus = async (req,res)=>{
 
     try{
 
 
-        const order = await Order.findById(req.params.id);
+        const orders = await Order.find()
 
+        .populate("userId")
+
+        .populate("products.productId")
+
+        .sort({
+            createdAt:-1
+        });
+
+
+
+        res.json(orders);
+
+
+
+    }
+    catch(error){
+
+
+        res.status(500).json({
+
+            message:error.message
+
+        });
+
+
+    }
+
+
+};
+
+
+
+
+// ==========================
+// UPDATE ORDER STATUS
+// ==========================
+
+const updateOrderStatus = async(req,res)=>{
+
+
+    try{
+
+
+        const order = await Order.findById(
+            req.params.id
+        );
 
 
         if(!order){
 
             return res.status(404).json({
 
-                message:"Order Not Found"
+                message:"Order not found"
 
             });
 
@@ -212,7 +214,7 @@ const updateOrderStatus = async (req,res)=>{
 
 
 
-        res.status(200).json({
+        res.json({
 
             message:"Order Status Updated",
 
@@ -222,7 +224,8 @@ const updateOrderStatus = async (req,res)=>{
 
 
 
-    }catch(error){
+    }
+    catch(error){
 
 
         res.status(500).json({
@@ -234,51 +237,81 @@ const updateOrderStatus = async (req,res)=>{
 
     }
 
+
 };
 
 
 
 
 
-// =========================
+// ==========================
 // DELETE ORDER
-// =========================
+// ==========================
 
-const deleteOrder = async (req, res) => {
+const deleteOrder = async(req,res)=>{
 
-    try {
 
-        const order = await Order.findByIdAndDelete(req.params.id);
+    try{
 
-        if (!order) {
+
+        const order = await Order.findById(
+            req.params.id
+        );
+
+
+        if(!order){
+
             return res.status(404).json({
-                message: "Order Not Found"
+
+                message:"Order not found"
+
             });
+
         }
 
-        res.status(200).json({
-            message: "Order Deleted Successfully"
+
+
+        await order.deleteOne();
+
+
+
+        res.json({
+
+            message:"Order Deleted"
+
         });
 
-    } catch (error) {
+
+
+    }
+    catch(error){
+
 
         res.status(500).json({
-            message: error.message
+
+            message:error.message
+
         });
+
 
     }
 
+
 };
 
 
-// =========================
-// EXPORTS
-// =========================
+
 
 module.exports = {
-    placeOrder,
+
+    createOrder,
+
     getMyOrders,
+
     getAllOrders,
+
     updateOrderStatus,
+
     deleteOrder
+
 };

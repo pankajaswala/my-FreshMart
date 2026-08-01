@@ -1,13 +1,15 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-const protect = async (req, res, next) => {
 
-    try {
+const protect = async (req,res,next)=>{
+
+    try{
 
         const authHeader = req.headers.authorization;
 
-        if (!authHeader || !authHeader.startsWith("Bearer")) {
+
+        if(!authHeader || !authHeader.startsWith("Bearer ")){
 
             return res.status(401).json({
                 message:"No token"
@@ -17,8 +19,7 @@ const protect = async (req, res, next) => {
 
 
         const token = authHeader.split(" ")[1];
-console.log("TOKEN:", token);
-console.log("VERIFY SECRET:", process.env.JWT_SECRET);
+
 
         const decoded = jwt.verify(
             token,
@@ -41,9 +42,9 @@ console.log("VERIFY SECRET:", process.env.JWT_SECRET);
         next();
 
 
-    } catch(error){
+    }catch(error){
 
-        return res.status(401).json({
+        res.status(401).json({
             message:error.message
         });
 
@@ -52,4 +53,28 @@ console.log("VERIFY SECRET:", process.env.JWT_SECRET);
 };
 
 
-module.exports = protect;
+
+const admin = (req,res,next)=>{
+
+
+    if(req.user && req.user.isAdmin){
+
+        next();
+
+    }else{
+
+        res.status(403).json({
+            message:"Admin access required"
+        });
+
+    }
+
+
+};
+
+
+
+module.exports = {
+    protect,
+    admin
+};
